@@ -1,0 +1,32 @@
+Experiment 1 - Amount won for 10 episodes 
+[80, 80, 80, 80, 80, 80, 80, 80, 80, 80] 
+Maximum loss was $-948
+Experiment 1 - Maximum loss in 1000 episodes $-131059
+        The upper and lower standard deviation from the mean: 
+        
+The upper std deviation reached a maximum at 4024.5694102024854
+        
+The upper std deviation line was stable at 80.0 value for the last 787 spins
+        
+        
+The lower std deviation reached a minimum at -4265.139410202485
+        
+The lower std deviation line was stable at 80.0 value for the last 787 spins
+    
+        For the 1000 spins in Experiment2,
+        
+ $80 occurred 606 times and $-256 occurred 387 times
+        
+ Other values are: [-207.   51. -239. -203.  -31. -243.  -32.]
+    
+    Experiment 2: The upper and lower standard deviation from the mean: 
+            
+The upper std deviation reached a maximum at 112.19214246609297
+            
+The upper std deviation line was stable at 112.19214246609297 value for the last 1 spins
+
+            
+The lower std deviation reached a minimum at -215.26050861294834
+            
+The lower std deviation line was stable at -215.184142466093 value for the last 1 spins
+        
