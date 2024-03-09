@@ -58,11 +58,17 @@ def testPolicy(symbol="AAPL", sd=dt.datetime(2010, 1, 1), ed=dt.datetime(2011,12
             # position goes out of the allowed constraints, so do nothing!
             position = 0
 
+        # we're allowed to do -2000 or 2000. The only way we can do that without going beyond the constraint
+        # is to do so at the edges. if you trade 2000 when net holding is 0, then your net holding will be 2000
+            # which is greater than the allowed 1000.
+        if net_holding != 0:
+            position *= 2
+
         df_trades.loc[dates_index[i],symbol] = position
         net_holding += position
 
     # now use the trades_df to generate benchmarks
-    # and calculate portfolion values
+    # and calculate portfolio values
     return df_trades
 
 

@@ -18,9 +18,15 @@ def generate_tos_plots(optimized, benchmark):
     optimized = optimized/optimized.iloc[0]
     benchmark = benchmark/benchmark.iloc[0]
     plt.figure()
-    plt.plot(optimized)
-    plt.plot(benchmark)
+    optimized.plot(color='r')
+    benchmark.plot(color='purple')
+    # plt.plot(optimized, color='red')
+    # plt.plot(benchmark, color='purple')
     plt.legend(['Optimized', 'Benchmark'])
+    plt.title("Theoretically optimal strategy vs benchmark")
+    plt.xlabel("Date")
+    plt.ylabel("Normalized value")
+    plt.grid(True)
     plt.show()
 
 

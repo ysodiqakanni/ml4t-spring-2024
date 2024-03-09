@@ -44,15 +44,12 @@ def compute_portvals(
     # Note: charge commission (on each transaction) as a deduction from cash balance
     # Also charge a percentage of impact.
     for idx, order_item in df_trades.iterrows():
-        #sym, order, shares = order_item["Symbol"], order_item["Order"], order_item["Shares"]
         position, shares = order_item[symbol], abs(order_item[symbol])
         market_impact = impact * shares
         if position > 0:
             # buying
-            #df_trades.loc[idx, symbol] += shares  # add the volume
             df_trades.loc[idx, "CASH"] -= (shares * df_prices.loc[idx, symbol] + commission + market_impact)
         else:
-            #df_trades.loc[idx, symbol] -= shares
             df_trades.loc[idx, "CASH"] += (shares * df_prices.loc[idx, symbol] - commission - market_impact)
 
     # let's calculate the holdings => for each row i, add df_trades[i] + holdings[i-1]
