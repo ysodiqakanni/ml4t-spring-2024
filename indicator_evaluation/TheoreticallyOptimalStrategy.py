@@ -25,10 +25,11 @@ def testPolicy(symbol="AAPL", sd=dt.datetime(2010, 1, 1), ed=dt.datetime(2011,12
     # get the stock prices for the date range
     # loop through the prices and determine whether to buy,sell or do nothing
 
+    symbols = [symbol]
     # the below line loads the adjusted price for all selected stocks including SPY
-    df_prices_all = get_data([symbol], pd.date_range(sd, ed))
+    df_prices_all = get_data(symbols, pd.date_range(sd, ed))
     # now exclude SPY
-    df_prices = df_prices_all[symbol]
+    df_prices = df_prices_all[symbols]
 
     # create trades dataframe from df_prices so they can have the same dimension and index
     df_trades = df_prices.copy()
@@ -47,17 +48,24 @@ def testPolicy(symbol="AAPL", sd=dt.datetime(2010, 1, 1), ed=dt.datetime(2011,12
         # eg, -1000 (yesterday) + 1000 today.
         # 0 yesterday + 1000 today
         position = 0
-        if df_prices[dates_index[i+1]] > df_prices[dates_index[i]]:
+        if df_prices.loc[dates_index[i+1], symbol] > df_prices.loc[dates_index[i],symbol]:
             # tomorrow's price is higher, so we buy!. You can only buy if holdings is 0 or -1000
             position = 1000
-        elif df_prices[dates_index[i+1]] < df_prices[dates_index[i]]:
+        elif df_prices.loc[dates_index[i+1], symbol] < df_prices.loc[dates_index[i], symbol]:
             # sell!
             position = -1000
         if position + net_holding < -1000 or position + net_holding > 1000:
             # position goes out of the allowed constraints, so do nothing!
             position = 0
 
-        df_trades[dates_index[i]] = position
+        df_trades.loc[dates_index[i],symbol] = position
         net_holding += position
 
+    # now use the trades_df to generate benchmarks
+    # and calculate portfolion values
     return df_trades
+
+
+def notes():
+    # new we calculate The performance of a portfolio starting with $100,000 cash, investing in 1000 shares of JPM,
+    pass
