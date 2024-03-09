@@ -78,8 +78,8 @@ def compute_portvals(
     symbols = df_orders["Symbol"].unique() # ["IBM","GOOG"]
     # load in the data in a dataframe
 
-    start_date = df_orders.index[0] # dt.datetime(2008,1,1)
-    end_date = df_orders.index[-1] # dt.datetime(2008,6,1)
+    start_date = df_orders.index[0]
+    end_date = df_orders.index[-1]
 
     # the below line loads the adjusted price for all selected stocks including SPY
     df_prices_all = get_data(symbols, pd.date_range(start_date, end_date))
