@@ -1,6 +1,7 @@
 import TheoreticallyOptimalStrategy as tos
 import datetime as dt
 from marketsimcode import compute_portvals
+import matplotlib.pyplot as plt
 
 """
 instructions
@@ -12,7 +13,15 @@ Starting cash is $100,000.
 def author():
     return 'syusuff3'
 
-
+def generate_tos_plots(optimized, benchmark):
+    # normalize by dividing by the first values
+    optimized = optimized/optimized.iloc[0]
+    benchmark = benchmark/benchmark.iloc[0]
+    plt.figure()
+    plt.plot(optimized)
+    plt.plot(benchmark)
+    plt.legend(['Optimized', 'Benchmark'])
+    plt.show()
 
 
 if "__main__" == "__main__":
@@ -20,15 +29,15 @@ if "__main__" == "__main__":
     # call testpolicy
     # call indicators
     # call marketsimcode
-    print("getting started")
-
     df_trades = tos.testPolicy(symbol="JPM", sd=dt.datetime(2008, 1, 1), ed=dt.datetime(2009, 12, 31), sv=100000)
     # Let's get a benchmark: The performance of a portfolio starting with $100,000 cash, investing in 1000 shares of JPM,
     df_benchmark_trades = df_trades.copy()
     df_benchmark_trades[:] = 0  # set all the values to zero
-    df_benchmark_trades[df_benchmark_trades.index[0]] = 1000
+    # now invest in 1000 shares and hold that position
+    df_benchmark_trades.loc[df_benchmark_trades.index[0], "JPM"] = 1000
 
     optimized_portfolio = compute_portvals(df_trades, symbol="JPM", start_val=100000,commission=0,impact=0)
     benchmark_portfolio = compute_portvals(df_benchmark_trades, symbol="JPM", start_val=100000,commission=0,impact=0)
+    generate_tos_plots(optimized_portfolio, benchmark_portfolio)
 
-    print(df_trades.values)
+    #print(df_trades.values)

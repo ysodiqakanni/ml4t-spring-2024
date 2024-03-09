@@ -27,8 +27,6 @@ def compute_portvals(
     # My pseudocode
     # read in the order file to get all the symbols
     # also get the start and end dates from the file
-
-
     start_date = df_trades.index[0]
     end_date = df_trades.index[-1]
     symbols = [symbol]
