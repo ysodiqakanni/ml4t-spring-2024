@@ -27,7 +27,27 @@ def generate_tos_plots(optimized, benchmark):
     plt.xlabel("Date")
     plt.ylabel("Normalized value")
     plt.grid(True)
-    plt.show()
+    file_name = "tos_chart"
+    plt.savefig("{}.png".format(str(file_name)))
+
+def compute_daily_returns(df):
+    """Compute and return the daily return values."""
+    daily_returns = df.copy()
+    #daily_returns[1:] = (df[1:] / df[:-1].values) - 1 # compute daily returns for row 1 onwards
+    daily_returns = (df / df.shift(1)) - 1  # much easier with Pandas!
+    daily_returns[0] = 0
+    #daily_returns.iloc[0, :] = 0  # Pandas leaves the 0th row full of Nans
+    return daily_returns
+def getStatistics(port_vals):
+    """
+    computes and returns cummulative returns, std and mean of daily returns
+    """
+    dailyReturns = compute_daily_returns(port_vals)
+    cr = (port_vals[-1]/port_vals[0]) -1
+    adr = dailyReturns.mean()
+    sddr = dailyReturns.std()
+
+    return [round(cr,6), round(adr,6), round(sddr,6), port_vals[-1]]
 
 
 if "__main__" == "__main__":
@@ -46,4 +66,9 @@ if "__main__" == "__main__":
     benchmark_portfolio = compute_portvals(df_benchmark_trades, symbol="JPM", start_val=100000,commission=0,impact=0)
     generate_tos_plots(optimized_portfolio, benchmark_portfolio)
 
-    #print(df_trades.values)
+    tos_statistics = getStatistics(optimized_portfolio)
+    benchmark_statistics = getStatistics(benchmark_portfolio)
+    #print("Benchmark CR, Mean and Std: ", benchmark_statistics[:-1])
+    #print("Optimized CR, Mean and Std: ", tos_statistics[:-1])
+
+    xval = 232
