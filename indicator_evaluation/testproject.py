@@ -50,7 +50,7 @@ def getStatistics(port_vals):
     return [round(cr,6), round(adr,6), round(sddr,6), port_vals[-1]]
 
 
-if "__main__" == "__main__":
+if __name__ == "__main__":
     # generate plots by making the following calls:
     # call testpolicy
     # call indicators
