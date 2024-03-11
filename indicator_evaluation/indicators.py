@@ -15,6 +15,12 @@ import math
 def author():
     return 'syusuff3'
 
+def get_adjusted_prices(symbols, start_date, end_date):
+    df_prices_all = get_data(symbols, pd.date_range(start_date, end_date))
+    # now exclude SPY
+    df_prices = df_prices_all[symbols]
+    return df_prices
+
 def get_sma(symbols, start_date, end_date, lookback=14):
     """
     Implement Simple Moving Average Indicator. If you have close prices 30,40,50,60,70,80,90,100,
@@ -86,12 +92,64 @@ def generate_bollinger_bands(symbols, sma, start_date, end_date, df_prices=None,
 
             bbp.ix[day,sym] = (df_prices.ix[day, sym] - bottom_band) / (top_band - bottom_band)
 
+def rsi_indicator(symbols, start_date, end_date, lookback):
+    df_prices = get_adjusted_prices(symbols, start_date, end_date)
+    df_rsi = df_prices.copy()
+    df_rsi.ix[:,:] = 0
+
+    for curr_day in range(df_prices.shape[0]):
+        if curr_day < lookback - 1:
+            continue
+        for sym in symbols:
+            up_gain = 0
+            down_loss = 0
+
+            # iterate over lookback from current day and calculate gain on up days, and loss on down days
+            for prev_day in range(curr_day-lookback+1, curr_day+1):
+                price_change = df_prices.ix[prev_day, sym] - df_prices.ix[prev_day-1, sym]
+
+                if price_change > 0:
+                    up_gain += price_change
+                else:
+                    down_loss -= price_change
+
+            # Recall, RSI = 100 - 100/(1+RS)
+            # RS = Avg gain/Avg loss
+            # if the total loss is 0, then RS is infinite, and RSI = 100
+            if down_loss == 0:
+                df_rsi.ix[curr_day, sym] = 100
+            else:
+                rs = (up_gain/lookback) / (down_loss/lookback)  # ratio of average gain and average loss
+                df_rsi.ix[curr_day, sym] = 100 - (100 / (1+rs))
+
+    # now let's generate a plot of rsi and adj close prices
+    generate_chart([(df_prices, "Adj Close"), (df_rsi, "RSI")], "The chart of Adjusted price and RSI", "Date", "Value", "RsiIndicator")
+    return df_rsi
+
+
+# lines represent a list of tuple of lines to plot on the same chart
+# each tuple looks like (dataframe, label)
+def generate_chart(lines, title, xlabel, ylabel, file_name):
+    plt.figure()
+    # plot the first line
+    ax = lines[0][0].plot()
+    for l in lines[1:]:
+        l[0].plot(ax=ax)
+
+    plt.grid(True)
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.legend([line[1] for line in lines])
+    plt.savefig("{}.png".format(str(file_name)))
+
 def run(symbols, start_date, end_date, lookback=14):
-    df_prices, df_sma = get_sma(symbols, start_date, end_date, 14)
-    df_prices, df_sma_long_term = get_sma(symbols, start_date, end_date, 50)
+    #df_prices, df_sma = get_sma(symbols, start_date, end_date, 14)
+    #df_prices, df_sma_long_term = get_sma(symbols, start_date, end_date, 50)
 
     # now plot sma over price
-    plot_sma(df_prices, df_sma,df_sma_long_term)
+    #plot_sma(df_prices, df_sma,df_sma_long_term)
+    rsi = rsi_indicator(symbols, start_date, end_date, lookback=14)
 
 
 if __name__ == '__main__':
