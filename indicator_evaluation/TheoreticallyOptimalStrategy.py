@@ -70,8 +70,3 @@ def testPolicy(symbol="AAPL", sd=dt.datetime(2010, 1, 1), ed=dt.datetime(2011,12
     # now use the trades_df to generate benchmarks
     # and calculate portfolio values
     return df_trades
-
-
-def notes():
-    # new we calculate The performance of a portfolio starting with $100,000 cash, investing in 1000 shares of JPM,
-    pass

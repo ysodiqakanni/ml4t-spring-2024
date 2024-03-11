@@ -56,27 +56,29 @@ def get_sma(symbols, start_date, end_date, lookback=14):
             sma.ix[day, sym] /= lookback
     return df_prices, sma
 
-def plot_sma(prices, sma, sma_long_term):
-    # get the prices
-    plt.figure()
-    ax = prices.plot(color='r')
-    sma.plot(color='g', ax=ax)
-    sma_long_term.plot(color='b', ax=ax)
+# def plot_sma(prices, sma, sma_long_term):
+#     # get the prices
+#     plt.figure()
+#     ax = prices.plot(color='r')
+#     sma.plot(color='g', ax=ax)
+#     sma_long_term.plot(color='b', ax=ax)
+#
+#     plt.grid(True)
+#     plt.title("SMA vs Adjusted closing price for JPM")
+#     plt.xlabel("Date")
+#     plt.ylabel("Price")
+#     plt.legend(["Closed prices", "SMA", "SMA long term"])
+#     #plt.show()
 
-    plt.grid(True)
-    plt.title("SMA vs Adjusted closing price for JPM")
-    plt.xlabel("Date")
-    plt.ylabel("Price")
-    plt.legend(["Closed prices", "SMA", "SMA long term"])
-    plt.show()
-
-def generate_bollinger_bands(symbols, sma, start_date, end_date, df_prices=None, lookback=14):
-    if df_prices is None:
-        df_prices_all = get_data(symbols, pd.date_range(start_date, end_date))
-        df_prices = df_prices_all[symbols]
+def bollinger_bands_indicator(symbols, start_date, end_date, lookback=14):
+    df_prices, sma = get_sma(symbols, start_date, end_date, lookback)
+    #
+    # if df_prices is None:
+    #     df_prices_all = get_data(symbols, pd.date_range(start_date, end_date))
+    #     df_prices = df_prices_all[symbols]
 
     bbp = df_prices.copy()
-    bbp[:,:] = 0
+    bbp[:] = 0
     for day in range(df_prices.shape[0]):
         for sym in symbols:
             # calculate the standard deviation over the lookback period. std = sum(x - mean)^2
@@ -92,6 +94,12 @@ def generate_bollinger_bands(symbols, sma, start_date, end_date, df_prices=None,
 
             bbp.ix[day,sym] = (df_prices.ix[day, sym] - bottom_band) / (top_band - bottom_band)
 
+    lines = [(df_prices, "Adj Close"), (sma, "SMA")]
+    line = [(bbp, "BBP")]
+    title = "SMA and Adj Close Price for JPM"
+    generate_chart(lines, title, "Date", "Value", "BolingerBands")
+    generate_chart(line, "Bollinger Band Percentage for JPM", "Date", "Value", "Bbp")
+    return bbp
 def rsi_indicator(symbols, start_date, end_date, lookback):
     df_prices = get_stock_data(symbols, start_date, end_date, "Adj Close")
     df_rsi = df_prices.copy()
@@ -123,7 +131,7 @@ def rsi_indicator(symbols, start_date, end_date, lookback):
                 df_rsi.ix[curr_day, sym] = 100 - (100 / (1+rs))
 
     # now let's generate a plot of rsi and adj close prices
-    generate_chart([(df_prices, "Adj Close"), (df_rsi, "RSI")], "The chart of Adjusted price and RSI", "Date", "Value", "RsiIndicator")
+    generate_chart([(df_prices, "Adj Close"), (df_rsi, "RSI")], "The chart of Adjusted price and RSI for JPM", "Date", "Value", "RsiIndicator")
     return df_rsi
 
 def stochastic_indicator(symbols, start_date, end_date, lookback=14):
@@ -137,6 +145,7 @@ def stochastic_indicator(symbols, start_date, end_date, lookback=14):
 
     df_stochastic = df_prices.copy()
     df_stochastic.ix[:, :] = 0
+    # Todo: set a 0 default value for all %k columns to avoid nan
 
     for curr_day in range(df_prices.shape[0]):
         if curr_day < lookback-1:
@@ -156,8 +165,40 @@ def stochastic_indicator(symbols, start_date, end_date, lookback=14):
 
     # let's generate the plots
     lines = [(df_stochastic[["JPM"]], "14-day Stochastic"), (df_prices[["JPM"]], "Price")]
-    generate_chart(lines, "Stochastic oscillator vs price", "Date", "Value", "StochasticIndicator")
+    title = "Stochastic oscillator vs price for JPM"
+    generate_chart(lines, title, "Date", "Value", "StochasticIndicator")
     return df_stochastic
+
+def rate_of_change_indicator(symbols, start_date, end_date, lookback=12):
+    # Rate of change is a momentum indicator
+    # formular: ROC = [(Close - Close n periods ago) / (Close n periods ago)] * 100
+    # lookback will be n in our formular
+    df_prices = get_stock_data(symbols, start_date, end_date)
+    df_roc = df_prices.copy()
+    df_roc.ix[:,:] = 0
+
+    for curr_day in range(df_prices.shape[0]):
+        prev_day = curr_day-lookback-1
+        if prev_day < 0:
+            continue
+        for sym in symbols:
+            df_roc.ix[curr_day, sym] = ((df_prices.ix[curr_day, sym] - df_prices.ix[prev_day, sym]) / df_prices.ix[prev_day, sym]) * 100
+
+    lines = [(df_roc[["JPM"]], "12-day Rate of Change"), (df_prices[["JPM"]], "Adj Close")]
+    title = "Rate of Change Indicator for JPM"
+    generate_chart(lines, title, "Date", "Value", "RateOfChangeIndicator")
+    return df_roc
+
+def golden_cross_indicator(symbols, start_date, end_date):
+    df_prices, df_sma_short_term = get_sma(symbols, start_date, end_date, 14)
+    df_prices, df_sma_long_term = get_sma(symbols, start_date, end_date, 50)
+    # for project 8, we identify the golden cross and death crosses and return signals -1,0,1
+    # for now we just return the 2 vectors
+
+    lines = [(df_prices, "Adj Close"), (df_sma_short_term, "Short Term SMA"), (df_sma_long_term, "Long Term SMA")]
+    title = "Long term and short term SMA plotted against Adj Close price"
+    generate_chart(lines, title, "Date", "Value", "GoldenCross")
+    return [df_sma_short_term, df_sma_long_term]
 
 # lines represent a list of tuple of lines to plot on the same chart
 # each tuple looks like (dataframe, label)
@@ -176,19 +217,17 @@ def generate_chart(lines, title, xlabel, ylabel, file_name):
     plt.savefig("{}.png".format(str(file_name)))
 
 def run(symbols, start_date, end_date, lookback=14):
-    #df_prices, df_sma = get_sma(symbols, start_date, end_date, 14)
-    #df_prices, df_sma_long_term = get_sma(symbols, start_date, end_date, 50)
-
-    # now plot sma over price
-    #plot_sma(df_prices, df_sma,df_sma_long_term)
-    #rsi = rsi_indicator(symbols, start_date, end_date, lookback=14)
+    bbp = bollinger_bands_indicator(symbols, start_date, end_date, lookback=14)
+    rsi = rsi_indicator(symbols, start_date, end_date, lookback=14)
     stochastic = stochastic_indicator(symbols, start_date, end_date, lookback=14)
+    roc = rate_of_change_indicator(symbols, start_date, end_date, lookback=12)
+    gcross = golden_cross_indicator(symbols, start_date, end_date)
 
 
-if __name__ == '__main__':
-    print("running...")
-    sd = dt.datetime(2008,1,1)
-    ed = dt.datetime(2009,12,31)
-    symbols = ['JPM']
-    run(symbols, sd, ed)
-    print("done")
+# if __name__ == '__main__':
+#     print("running...")
+#     sd = dt.datetime(2008,1,1)
+#     ed = dt.datetime(2009,12,31)
+#     symbols = ['JPM']
+#     run(symbols, sd, ed)
+#     print("done")

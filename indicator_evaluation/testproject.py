@@ -2,6 +2,7 @@ import TheoreticallyOptimalStrategy as tos
 import datetime as dt
 from marketsimcode import compute_portvals
 import matplotlib.pyplot as plt
+import indicators
 
 """
 instructions
@@ -20,14 +21,12 @@ def generate_tos_plots(optimized, benchmark):
     plt.figure()
     optimized.plot(color='r')
     benchmark.plot(color='purple')
-    # plt.plot(optimized, color='red')
-    # plt.plot(benchmark, color='purple')
     plt.legend(['Optimized', 'Benchmark'])
     plt.title("Theoretically optimal strategy vs benchmark")
     plt.xlabel("Date")
     plt.ylabel("Normalized value")
     plt.grid(True)
-    file_name = "tos_chart"
+    file_name = "TosChart"
     plt.savefig("{}.png".format(str(file_name)))
 
 def compute_daily_returns(df):
@@ -55,7 +54,9 @@ if __name__ == "__main__":
     # call testpolicy
     # call indicators
     # call marketsimcode
-    df_trades = tos.testPolicy(symbol="JPM", sd=dt.datetime(2008, 1, 1), ed=dt.datetime(2009, 12, 31), sv=100000)
+    start_date = dt.datetime(2008,1,1)
+    end_date = dt.datetime(2009, 12,31)
+    df_trades = tos.testPolicy(symbol="JPM", sd=start_date, ed=end_date, sv=100000)
     # Let's get a benchmark: The performance of a portfolio starting with $100,000 cash, investing in 1000 shares of JPM,
     df_benchmark_trades = df_trades.copy()
     df_benchmark_trades[:] = 0  # set all the values to zero
@@ -68,7 +69,10 @@ if __name__ == "__main__":
 
     tos_statistics = getStatistics(optimized_portfolio)
     benchmark_statistics = getStatistics(benchmark_portfolio)
-    #print("Benchmark CR, Mean and Std: ", benchmark_statistics[:-1])
-    #print("Optimized CR, Mean and Std: ", tos_statistics[:-1])
 
-    xval = 232
+    # print("Benchmark CR, Mean and Std: ", benchmark_statistics[:-1])
+    # print("Optimized CR, Mean and Std: ", tos_statistics[:-1])
+
+    # run the indicators
+    indicators.run(["JPM"], start_date, end_date, lookback=14)
+
