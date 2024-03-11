@@ -15,8 +15,8 @@ import math
 def author():
     return 'syusuff3'
 
-def get_adjusted_prices(symbols, start_date, end_date):
-    df_prices_all = get_data(symbols, pd.date_range(start_date, end_date))
+def get_stock_data(symbols, start_date, end_date, data="Adj Close"):
+    df_prices_all = get_data(symbols, pd.date_range(start_date, end_date), colname=data)
     # now exclude SPY
     df_prices = df_prices_all[symbols]
     return df_prices
@@ -93,7 +93,7 @@ def generate_bollinger_bands(symbols, sma, start_date, end_date, df_prices=None,
             bbp.ix[day,sym] = (df_prices.ix[day, sym] - bottom_band) / (top_band - bottom_band)
 
 def rsi_indicator(symbols, start_date, end_date, lookback):
-    df_prices = get_adjusted_prices(symbols, start_date, end_date)
+    df_prices = get_stock_data(symbols, start_date, end_date, "Adj Close")
     df_rsi = df_prices.copy()
     df_rsi.ix[:,:] = 0
 
@@ -126,6 +126,38 @@ def rsi_indicator(symbols, start_date, end_date, lookback):
     generate_chart([(df_prices, "Adj Close"), (df_rsi, "RSI")], "The chart of Adjusted price and RSI", "Date", "Value", "RsiIndicator")
     return df_rsi
 
+def stochastic_indicator(symbols, start_date, end_date, lookback=14):
+    # the formular:
+    # %K = (currentClose - LowestLow) / (HighestHigh - LowestLow) * 100
+    # %D = 3-day SMA of %K
+    # so we need adj close, low and high
+    df_prices = get_stock_data(symbols, start_date, end_date, "Adj Close")
+    df_high_prices = get_stock_data(symbols, start_date, end_date, "High")
+    df_low_prices = get_stock_data(symbols, start_date, end_date, "Low")
+
+    df_stochastic = df_prices.copy()
+    df_stochastic.ix[:, :] = 0
+
+    for curr_day in range(df_prices.shape[0]):
+        if curr_day < lookback-1:
+            continue
+        # calculate for each symbol
+        for sym in symbols:
+            # get the highest of the past 14 data. that is data[day-14,day]
+            highs_14 = df_high_prices.ix[curr_day-lookback+1:curr_day, sym]
+            low_14 = df_low_prices.ix[curr_day-lookback+1:curr_day, sym]
+            # st the percentage k value for this symbol on this day
+            kcol = f"{sym}_PK"
+            df_stochastic.ix[curr_day, kcol] = (df_prices.ix[curr_day, sym] - min(low_14)) / (max(highs_14) - min(low_14)) * 100
+            # calculate the %D which is just a 3-day SMA of %k.
+            # we need to have seen loopback + 3 columns
+            if curr_day >= lookback-1 + 3-1:
+                df_stochastic.ix[curr_day, sym] = sum(df_stochastic.ix[curr_day-2:curr_day+1, kcol])/3
+
+    # let's generate the plots
+    lines = [(df_stochastic[["JPM"]], "14-day Stochastic"), (df_prices[["JPM"]], "Price")]
+    generate_chart(lines, "Stochastic oscillator vs price", "Date", "Value", "StochasticIndicator")
+    return df_stochastic
 
 # lines represent a list of tuple of lines to plot on the same chart
 # each tuple looks like (dataframe, label)
@@ -149,7 +181,8 @@ def run(symbols, start_date, end_date, lookback=14):
 
     # now plot sma over price
     #plot_sma(df_prices, df_sma,df_sma_long_term)
-    rsi = rsi_indicator(symbols, start_date, end_date, lookback=14)
+    #rsi = rsi_indicator(symbols, start_date, end_date, lookback=14)
+    stochastic = stochastic_indicator(symbols, start_date, end_date, lookback=14)
 
 
 if __name__ == '__main__':
