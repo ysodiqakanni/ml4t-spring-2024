@@ -46,8 +46,12 @@ def getStatistics(port_vals):
     adr = dailyReturns.mean()
     sddr = dailyReturns.std()
 
-    return [round(cr,6), round(adr,6), round(sddr,6), port_vals[-1]]
+    return [round(cr,6), round(sddr,6), round(adr,6), port_vals[-1]]
 
+def print_to_file(content):
+    f = open("p6_results.txt", 'a')
+    f.write(content)
+    f.close()
 
 if __name__ == "__main__":
     # generate plots by making the following calls:
@@ -70,8 +74,12 @@ if __name__ == "__main__":
     tos_statistics = getStatistics(optimized_portfolio)
     benchmark_statistics = getStatistics(benchmark_portfolio)
 
-    # print("Benchmark CR, Mean and Std: ", benchmark_statistics[:-1])
-    # print("Optimized CR, Mean and Std: ", tos_statistics[:-1])
+    # write output to p6_results.txt
+    print_to_file("\nBenchmark CR, Stdev and Mean:\n")
+    print_to_file(''.join([str(d) + " " for d in benchmark_statistics[:-1]]))
+
+    print_to_file("\n\nOptimized CR, Stdev and Mean:\n")
+    print_to_file(''.join([str(d) + " " for d in tos_statistics[:-1]]))
 
     # run the indicators
     indicators.run(["JPM"], start_date, end_date, lookback=14)
