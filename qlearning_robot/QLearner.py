@@ -84,6 +84,8 @@ class QLearner(object):
         self.Tc[:] = 0.00001
         self.T_dyna = self.Tc / np.sum(self.Tc, axis=2, keepdims=True)
         self.R_dyna = np.zeros((self.num_states, self.num_actions))
+
+
   		  	   		 	   			  		 			     			  	 
     def querysetstate(self, s):  		  	   		 	   			  		 			     			  	 
         """  		  	   		 	   			  		 			     			  	 
@@ -144,7 +146,7 @@ class QLearner(object):
         self.rar *= self.radr
 
         # now let's do dyna
-        if self.dyna < -8:
+        if self.dyna > 0:
             # update the T table
             # update R table
             # perform a loop and hallucinate x times
