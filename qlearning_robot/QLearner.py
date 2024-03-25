@@ -76,7 +76,14 @@ class QLearner(object):
         self.num_states = num_states
         self.alpha = alpha
         self.gamma = gamma
+        self.dyna = dyna
         self.Q = np.zeros((self.num_states, self.num_actions))
+        #self.T_dyna = np.zeros([])
+        #self.R_dyna = np.zeros([])
+        self.Tc = np.zeros((num_states, num_actions, num_states))
+        self.Tc[:] = 0.00001
+        self.T_dyna = self.Tc / np.sum(self.Tc, axis=2, keepdims=True)
+        self.R_dyna = np.zeros((self.num_states, self.num_actions))
   		  	   		 	   			  		 			     			  	 
     def querysetstate(self, s):  		  	   		 	   			  		 			     			  	 
         """  		  	   		 	   			  		 			     			  	 
@@ -93,7 +100,11 @@ class QLearner(object):
         if self.verbose:  		  	   		 	   			  		 			     			  	 
             print(f"s = {s}, a = {action}")  		  	   		 	   			  		 			     			  	 
         return action  		  	   		 	   			  		 			     			  	 
-  		  	   		 	   			  		 			     			  	 
+
+    def update_q_table(self, state, act, rval, sprime):
+        self.Q[state, act] = (1 - self.alpha) * self.Q[state, act] + self.alpha * (
+                    rval + self.gamma * self.Q[sprime, np.argmax(self.Q[sprime])])
+
     def query(self, s_prime, r):  		  	   		 	   			  		 			     			  	 
         """  		  	   		 	   			  		 			     			  	 
         Update the Q table and return an action  		  	   		 	   			  		 			     			  	 
@@ -115,7 +126,8 @@ class QLearner(object):
         # update the q table using the la
         # Qprime is the new mean. Q is the old mean
         # Qprime(s,a) = (1-alpha)Q(s,a) + alpha(r + gamma * Q(sprime, ArgMaxaprimeQ(sprime, aprime)))
-        self.Q[self.s, self.a] = (1 - self.alpha) * self.Q[self.s, self.a] + self.alpha*(r + self.gamma*self.Q[s_prime, np.argmax(self.Q[s_prime])])
+        self.update_q_table(self.s, self.a,r,s_prime)
+        #self.Q[self.s, self.a] = (1 - self.alpha) * self.Q[self.s, self.a] + self.alpha*(r + self.gamma*self.Q[s_prime, np.argmax(self.Q[s_prime])])
 
         # now get the new action to take
         # should we take the action randomly?
@@ -130,14 +142,39 @@ class QLearner(object):
             # go to the s_prime row and find the action with the highest Q value
             action = np.argmax(self.Q[s_prime])
         self.rar *= self.radr
+
+        # now let's do dyna
+        if self.dyna < -8:
+            # update the T table
+            # update R table
+            # perform a loop and hallucinate x times
+            # T[s,a,s'] = probability of going from state s to s' using action a
+            self.Tc[self.s, self.a, s_prime] += 1   # increment the count of occurrence of s,a,s'
+            self.T_dyna = self.Tc / np.sum(self.Tc, axis=2, keepdims=True)
+            self.R_dyna[self.s, self.a] = (1-self.alpha) * self.R_dyna[self.s, self.a] + self.alpha * r
+
+            for i in range(self.dyna):
+                # now select a random state and action
+                rand_s = np.random.randint(0,self.num_states)
+                rand_a = np.random.randint(0,self.num_actions)
+                # now infer s_prime from the T_dyna array. Basically, go to the T table for T[s,a]
+                # and get the sprime probability values (3rd axis). Choose the sprime based on their Prob values
+                prob_counts = np.random.multinomial(1, self.T_dyna[rand_s, rand_a])
+                temp_sprime = prob_counts.argmax()
+                temp_r = self.R_dyna[rand_s, rand_a]
+                self.update_q_table(rand_s, rand_a, temp_r, temp_sprime)
+
         # now save the action and state for later use
         self.a = action
         self.s = s_prime
 
+
         if self.verbose:  		  	   		 	   			  		 			     			  	 
             print(f"s = {s_prime}, a = {action}, r={r}")  		  	   		 	   			  		 			     			  	 
-        return action  		  	   		 	   			  		 			     			  	 
-  		  	   		 	   			  		 			     			  	 
+        return action
+
+    def author(self):
+        return 'syusuff3'
   		  	   		 	   			  		 			     			  	 
 if __name__ == "__main__":  		  	   		 	   			  		 			     			  	 
     print("Remember Q from Star Trek? Well, this isn't him")  		  	   		 	   			  		 			     			  	 
