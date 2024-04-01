@@ -86,6 +86,7 @@ class QLearner(object):
         self.R_dyna = np.zeros((self.num_states, self.num_actions))
 
 
+
   		  	   		 	   			  		 			     			  	 
     def querysetstate(self, s):  		  	   		 	   			  		 			     			  	 
         """  		  	   		 	   			  		 			     			  	 
@@ -99,6 +100,7 @@ class QLearner(object):
         self.s = s  		  	   		 	   			  		 			     			  	 
         action = np.argmax(self.Q[s])   # rand.randint(0, self.num_actions - 1)
         self.a = action
+
         if self.verbose:  		  	   		 	   			  		 			     			  	 
             print(f"s = {s}, a = {action}")  		  	   		 	   			  		 			     			  	 
         return action  		  	   		 	   			  		 			     			  	 
@@ -145,6 +147,7 @@ class QLearner(object):
             action = np.argmax(self.Q[s_prime])
         self.rar *= self.radr
 
+
         # now let's do dyna
         if self.dyna > 0:
             # update the T table
@@ -155,14 +158,18 @@ class QLearner(object):
             self.T_dyna = self.Tc / np.sum(self.Tc, axis=2, keepdims=True)
             self.R_dyna[self.s, self.a] = (1-self.alpha) * self.R_dyna[self.s, self.a] + self.alpha * r
 
+            #useful_states = list(self.seen_states)
+            random_states = np.random.randint(0,self.num_states, size=self.dyna)
+            random_actions = np.random.randint(0, self.num_actions, size=self.dyna)
             for i in range(self.dyna):
                 # now select a random state and action
-                rand_s = np.random.randint(0,self.num_states)
-                rand_a = np.random.randint(0,self.num_actions)
+                #rand_s =  np.random.randint(0,self.num_states)
+                #rand_a = np.random.randint(0,self.num_actions)
+                rand_s, rand_a = random_states[i], random_actions[i]
                 # now infer s_prime from the T_dyna array. Basically, go to the T table for T[s,a]
                 # and get the sprime probability values (3rd axis). Choose the sprime based on their Prob values
-                prob_counts = np.random.multinomial(1, self.T_dyna[rand_s, rand_a])
-                temp_sprime = prob_counts.argmax()
+                temp_sprime = np.random.multinomial(1, self.T_dyna[rand_s, rand_a]).argmax()
+                #temp_sprime = prob_counts.argmax()
                 temp_r = self.R_dyna[rand_s, rand_a]
                 self.update_q_table(rand_s, rand_a, temp_r, temp_sprime)
 
