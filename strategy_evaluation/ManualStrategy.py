@@ -14,14 +14,10 @@ class ManualStrategy(object):
         self.verbose = verbose
 
 
-    def testPolicy(
-            self,
-            symbol="IBM",
-            sd=dt.datetime(2009, 1, 1),
-            ed=dt.datetime(2010, 1, 1),
-            sv=10000,
-    ):
-
+    def testPolicy(self, symbol = "AAPL",
+                   sd=dt.datetime(2010, 1, 1),
+                   ed=dt.datetime(2011,12,31),
+                   sv=100000):
         # First trade would be start_date + 1
         # for simple case (just 1 indicator)
         # using the symbol and date range, call the indicator fn and get the signal values as a single vector
@@ -30,6 +26,7 @@ class ManualStrategy(object):
         # add to the orders array
         # return the orders array.
         # done!!
+        # Theoretically optimal = $678610
 
         dates = pd.date_range(sd, ed)
         prices_all = ut.get_data([symbol], dates)  # automatically adds SPY
@@ -40,40 +37,33 @@ class ManualStrategy(object):
         symbols = [symbol]
         lookback = 14
         rsi_vals = indicators.rsi_indicator(symbols, sd, ed, lookback)
+        bbp = indicators.bollinger_bands_indicator(symbols,sd, ed, 14)
+        stochastic = indicators.stochastic_indicator(symbols, sd, ed, lookback)
 
         # Note that: Allowable positions are 1000 shares long, 1000 shares short, 0 shares.
         position = 0
+        action = 0
         # use the index of rsi to create the loop
         for day in range(rsi_vals.shape[0]):
-            if rsi_vals.ix[day, symbol] < 30:
+            if position > 2000 or position < -2000:
+                print("danger here! pos=", position)
+            if rsi_vals.ix[day, symbol] < 30 or bbp.ix[day, symbol] < 0.2 and stochastic.ix[day, symbol] < 20:
                 # BUY
                 #trades.append([rsi_vals.index[day].date(), symbol, "BUY", 1000])
-                trades.values[day, :] = 1000 - position
-            elif rsi_vals.ix[day, symbol] > 70:
+                #trades.values[day, :] = 1000 - position
+                action = 1000 - position
+                trades.values[day, :] = action
+            elif rsi_vals.ix[day, symbol] > 70 or bbp.ix[day, symbol] > 0.8 and stochastic.ix[day, symbol] > 80:
                 #trades.append([rsi_vals.index[day].date(), symbol, "SELL", 1000])
-                trades.values[day, :] = -1000 - position
+                #trades.values[day, :] = -1000 - position
+                action = -1000 - position
+                trades.values[day, :] = action
+            else:
+                #print("what do we do here?")
+                # here we do nothing. So if we're currently at 1000, we go -1000
+                action = -position
+            position += action
 
-        return trades
-
-        # here we build a fake set of trades
-        # your code should return the same sort of data
-        dates = pd.date_range(sd, ed)
-        prices_all = ut.get_data([symbol], dates)  # automatically adds SPY
-        trades = prices_all[[symbol, ]]  # only portfolio symbols
-        trades_SPY = prices_all["SPY"]  # only SPY, for comparison later
-        trades.values[:, :] = 0  # set them all to nothing
-        trades.values[0, :] = 1000  # add a BUY at the start
-        trades.values[40, :] = -1000  # add a SELL
-        trades.values[41, :] = 1000  # add a BUY
-        trades.values[60, :] = -2000  # go short from long
-        trades.values[61, :] = 2000  # go long from short
-        trades.values[-1, :] = -1000  # exit on the last day
-        if self.verbose:
-            print(type(trades))  # it better be a DataFrame!
-        if self.verbose:
-            print(trades)
-        if self.verbose:
-            print(prices_all)
         return trades
 
 
@@ -107,5 +97,9 @@ if __name__ == "__main__":
     optimized_portfolio = compute_portvals(orders, symbol=sym, start_val=100000, commission=9.95, impact=0.005)
     benchmark_portfolio = compute_portvals(df_benchmark_trades, symbol=sym, start_val=100000,commission=9.95,impact=0.005)
     generate_plots(optimized_portfolio, benchmark_portfolio)
+    stats_manual = indicators.getStatistics(optimized_portfolio)
+    stats_benchmark = indicators.getStatistics(benchmark_portfolio)
+    print("Manual statistics: CR, SD, Mean, Portfolio", stats_manual)
+    print("Benchmark statistics: CR, SD, Mean, Portfolio", stats_benchmark)
     print("Done running")
 

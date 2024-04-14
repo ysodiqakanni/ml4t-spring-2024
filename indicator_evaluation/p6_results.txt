@@ -4,3 +4,8 @@ Benchmark CR, Stdev and Mean:
 
 Optimized CR, Stdev and Mean:
 5.7861 0.004546 0.003809 
+Benchmark CR, Stdev and Mean:
+0.0123 0.016987 0.000168 
+
+Optimized CR, Stdev and Mean:
+5.7861 0.004546 0.003809 

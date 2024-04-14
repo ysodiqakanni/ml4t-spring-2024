@@ -81,6 +81,9 @@ if __name__ == "__main__":
     print_to_file("\n\nOptimized CR, Stdev and Mean:\n")
     print_to_file(''.join([str(d) + " " for d in tos_statistics[:-1]]))
 
+    # remove next line
+    print("TOS stats: ", tos_statistics)
+
     # run the indicators
     indicators.run(["JPM"], start_date, end_date, lookback=14)
 
