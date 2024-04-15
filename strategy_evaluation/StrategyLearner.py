@@ -58,6 +58,8 @@ class StrategyLearner(object):
         self.impact = impact  		  	   		 	   			  		 			     			  	 
         self.commission = commission
         self.learner = rtl.RTLearner(leaf_size=5)
+        self.lookback = 8
+        random.seed(903953477)
   		  	   		 	   			  		 			     			  	 
     # this method should create a QLearner, and train it for trading  		  	   		 	   			  		 			     			  	 
 
@@ -90,16 +92,17 @@ class StrategyLearner(object):
             # set a value N, now iterate over days, at day i, check the price at day[i+N]
             # based on that, set y[i] to -1, 0 or 1.
         symbols = [symbol]
-        lookback = 14
-        rsi = indicators.rsi_indicator(symbols, sd, ed, lookback)
-        bbp = indicators.bollinger_bands_indicator(symbols, sd, ed, 14)
-        stochastic = indicators.stochastic_indicator(symbols, sd, ed, lookback)
+        #lookback = 3
+        rsi = indicators.rsi_indicator(symbols, sd, ed, self.lookback)
+        bbp = indicators.bollinger_bands_indicator(symbols, sd, ed, self.lookback)
+        stochastic = indicators.stochastic_indicator(symbols, sd, ed, self.lookback)
         merged_indicators = pd.concat([rsi, bbp, stochastic], axis=1)
         # add an extra column filled with zeros
         merged_indicators["Y"] = 0
         prices = self.get_stock_data(symbols, sd, ed, "Adj Close")
         # next we create a numpy array with 3 columns being the rsi, bbp and stochastic vals.
-        data = merged_indicators.to_numpy() # np.random.rand((252, 4))
+        merged_indicators.fillna(0, inplace=True)
+        data = merged_indicators.values # np.random.rand((252, 4))
         rows = rsi.shape[0]     # total number of trading days/rows. Must be equal for all indicators
         N = 15      # set the lookahead period
         for day in range(rows-N-1):
@@ -114,7 +117,7 @@ class StrategyLearner(object):
 
         # add your code to do learning here
         # Now at this point call the DT or RT learner
-        self.learner.add_evidence(data[:, 0:3], data[-1,:])
+        self.learner.add_evidence(data[:, 0:3], data[:, -1])
 
 
         return
@@ -138,13 +141,10 @@ class StrategyLearner(object):
             print(volume)  		  	   		 	   			  		 			     			  	 
   		  	   		 	   			  		 			     			  	 
     # this method should use the existing policy and test it against new data  		  	   		 	   			  		 			     			  	 
-    def testPolicy(  		  	   		 	   			  		 			     			  	 
-        self,  		  	   		 	   			  		 			     			  	 
-        symbol="IBM",  		  	   		 	   			  		 			     			  	 
-        sd=dt.datetime(2009, 1, 1),  		  	   		 	   			  		 			     			  	 
-        ed=dt.datetime(2010, 1, 1),  		  	   		 	   			  		 			     			  	 
-        sv=10000,  		  	   		 	   			  		 			     			  	 
-    ):  		  	   		 	   			  		 			     			  	 
+    def testPolicy(self, symbol="AAPL",
+                   sd=dt.datetime(2010,1,1),
+                   ed=dt.datetime(2011,12,31),
+                   sv=100000):
         """  		  	   		 	   			  		 			     			  	 
         Tests your learner using data outside of the training data  		  	   		 	   			  		 			     			  	 
   		  	   		 	   			  		 			     			  	 
@@ -167,19 +167,20 @@ class StrategyLearner(object):
         # here we call the query function of RTLearner
         # first we need to get the data points [the x feature - indicators]
         symbols = [symbol]
-        lookback = 14
-        rsi = indicators.rsi_indicator(symbols, sd, ed, lookback)
-        bbp = indicators.bollinger_bands_indicator(symbols, sd, ed, 14)
-        stochastic = indicators.stochastic_indicator(symbols, sd, ed, lookback)
+        #lookback = 14
+
+        bbp = indicators.bollinger_bands_indicator(symbols, sd, ed, self.lookback)
+        rsi = indicators.rsi_indicator(symbols, sd, ed, self.lookback)
+        stochastic = indicators.stochastic_indicator(symbols, sd, ed, self.lookback)
 
         merged_indicators = pd.concat([rsi, bbp, stochastic], axis=1)
+        merged_indicators.fillna(0, inplace=True)
         points = merged_indicators.values
-        points.fillna(0, inplace=True)
         result = self.learner.query(points)
 
         dates = pd.date_range(sd, ed)
         prices_all = ut.get_data([symbol], dates)  # automatically adds SPY
-        trades = prices_all[[symbol, ]]  # only portfolio symbols
+        trades = prices_all[[symbol, ]].copy()  # only portfolio symbols
         trades.values[:, :] = 0  # set them all to nothing
 
         position = 0
@@ -193,6 +194,8 @@ class StrategyLearner(object):
             else:
                 action = -position
             trades.ix[day, symbol] = action
+
+            position += action
         
         return trades
 
