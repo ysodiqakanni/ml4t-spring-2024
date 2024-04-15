@@ -31,8 +31,11 @@ import datetime as dt
 import random  		  	   		 	   			  		 			     			  	 
   		  	   		 	   			  		 			     			  	 
 import pandas as pd  		  	   		 	   			  		 			     			  	 
-import util as ut  		  	   		 	   			  		 			     			  	 
-  		  	   		 	   			  		 			     			  	 
+import util as ut
+import indicators
+import numpy as np
+from util import get_data
+import RTLearner as rtl
   		  	   		 	   			  		 			     			  	 
 class StrategyLearner(object):  		  	   		 	   			  		 			     			  	 
     """  		  	   		 	   			  		 			     			  	 
@@ -53,16 +56,21 @@ class StrategyLearner(object):
         """  		  	   		 	   			  		 			     			  	 
         self.verbose = verbose  		  	   		 	   			  		 			     			  	 
         self.impact = impact  		  	   		 	   			  		 			     			  	 
-        self.commission = commission  		  	   		 	   			  		 			     			  	 
+        self.commission = commission
+        self.learner = rtl.RTLearner(leaf_size=5)
   		  	   		 	   			  		 			     			  	 
     # this method should create a QLearner, and train it for trading  		  	   		 	   			  		 			     			  	 
-    def add_evidence(  		  	   		 	   			  		 			     			  	 
-        self,  		  	   		 	   			  		 			     			  	 
-        symbol="IBM",  		  	   		 	   			  		 			     			  	 
-        sd=dt.datetime(2008, 1, 1),  		  	   		 	   			  		 			     			  	 
-        ed=dt.datetime(2009, 1, 1),  		  	   		 	   			  		 			     			  	 
-        sv=10000,  		  	   		 	   			  		 			     			  	 
-    ):  		  	   		 	   			  		 			     			  	 
+
+    def get_stock_data(self, symbols, start_date, end_date, data="Adj Close"):
+        df_prices_all = get_data(symbols, pd.date_range(start_date, end_date), colname=data)
+        # now exclude SPY
+        df_prices = df_prices_all[symbols]
+        return df_prices
+
+    def add_evidence(self, symbol="AAPL",
+                     sd=dt.datetime(2008,1,1),
+                     ed=dt.datetime(2009,12,31),
+                     sv=100000):
         """  		  	   		 	   			  		 			     			  	 
         Trains your strategy learner over a given time frame.  		  	   		 	   			  		 			     			  	 
   		  	   		 	   			  		 			     			  	 
@@ -75,8 +83,41 @@ class StrategyLearner(object):
         :param sv: The starting value of the portfolio  		  	   		 	   			  		 			     			  	 
         :type sv: int  		  	   		 	   			  		 			     			  	 
         """  		  	   		 	   			  		 			     			  	 
-  		  	   		 	   			  		 			     			  	 
-        # add your code to do learning here  		  	   		 	   			  		 			     			  	 
+
+        # before doing the learning, we need to first create the dataset.
+        # we will use the indicator values for the features columns
+        # and we will build the y colum as follows:
+            # set a value N, now iterate over days, at day i, check the price at day[i+N]
+            # based on that, set y[i] to -1, 0 or 1.
+        symbols = [symbol]
+        lookback = 14
+        rsi = indicators.rsi_indicator(symbols, sd, ed, lookback)
+        bbp = indicators.bollinger_bands_indicator(symbols, sd, ed, 14)
+        stochastic = indicators.stochastic_indicator(symbols, sd, ed, lookback)
+        merged_indicators = pd.concat([rsi, bbp, stochastic], axis=1)
+        # add an extra column filled with zeros
+        merged_indicators["Y"] = 0
+        prices = self.get_stock_data(symbols, sd, ed, "Adj Close")
+        # next we create a numpy array with 3 columns being the rsi, bbp and stochastic vals.
+        data = merged_indicators.to_numpy() # np.random.rand((252, 4))
+        rows = rsi.shape[0]     # total number of trading days/rows. Must be equal for all indicators
+        N = 15      # set the lookahead period
+        for day in range(rows-N-1):
+            # compare current price and price at N
+            if prices.ix[day+N, symbol] < prices.ix[day, symbol]:
+                # y column is the third
+                data[day, 3] = -1
+            elif prices.ix[day+N, symbol] > prices.ix[day, symbol]:
+                data[day, 3] = 1
+            else:
+                data[day, 3] = 0
+
+        # add your code to do learning here
+        # Now at this point call the DT or RT learner
+        self.learner.add_evidence(data[:, 0:3], data[-1,:])
+
+
+        return
   		  	   		 	   			  		 			     			  	 
         # example usage of the old backward compatible util function  		  	   		 	   			  		 			     			  	 
         syms = [symbol]  		  	   		 	   			  		 			     			  	 
@@ -122,7 +163,40 @@ class StrategyLearner(object):
         :rtype: pandas.DataFrame  		  	   		 	   			  		 			     			  	 
         """  		  	   		 	   			  		 			     			  	 
   		  	   		 	   			  		 			     			  	 
-        # here we build a fake set of trades  		  	   		 	   			  		 			     			  	 
+
+        # here we call the query function of RTLearner
+        # first we need to get the data points [the x feature - indicators]
+        symbols = [symbol]
+        lookback = 14
+        rsi = indicators.rsi_indicator(symbols, sd, ed, lookback)
+        bbp = indicators.bollinger_bands_indicator(symbols, sd, ed, 14)
+        stochastic = indicators.stochastic_indicator(symbols, sd, ed, lookback)
+
+        merged_indicators = pd.concat([rsi, bbp, stochastic], axis=1)
+        points = merged_indicators.values
+        points.fillna(0, inplace=True)
+        result = self.learner.query(points)
+
+        dates = pd.date_range(sd, ed)
+        prices_all = ut.get_data([symbol], dates)  # automatically adds SPY
+        trades = prices_all[[symbol, ]]  # only portfolio symbols
+        trades.values[:, :] = 0  # set them all to nothing
+
+        position = 0
+        action = 0
+        for day in range(1, result.shape[0]):
+            if result[day] == 1:
+                # sell
+                action = 1000 - position
+            elif result[day] == -1:
+                action = -1000 - position
+            else:
+                action = -position
+            trades.ix[day, symbol] = action
+        
+        return trades
+
+        # here we build a fake set of trades
         # your code should return the same sort of data  		  	   		 	   			  		 			     			  	 
         dates = pd.date_range(sd, ed)  		  	   		 	   			  		 			     			  	 
         prices_all = ut.get_data([symbol], dates)  # automatically adds SPY  		  	   		 	   			  		 			     			  	 
@@ -147,5 +221,6 @@ class StrategyLearner(object):
 if __name__ == "__main__":  		  	   		 	   			  		 			     			  	 
     print("One does not simply think up a strategy")
     sl = StrategyLearner()
+    ab = sl.add_evidence()
     my_trades = sl.testPolicy()
     print("received trades")
