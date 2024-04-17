@@ -36,7 +36,6 @@ import indicators
 import numpy as np
 from util import get_data
 import RTLearner as rtl
-  		  	   		 	   			  		 			     			  	 
 class StrategyLearner(object):  		  	   		 	   			  		 			     			  	 
     """  		  	   		 	   			  		 			     			  	 
     A strategy learner that can learn a trading policy using the same indicators used in ManualStrategy.  		  	   		 	   			  		 			     			  	 
@@ -58,7 +57,7 @@ class StrategyLearner(object):
         self.impact = impact  		  	   		 	   			  		 			     			  	 
         self.commission = commission
         self.learner = rtl.RTLearner(leaf_size=5)
-        self.lookback = 8
+        self.lookback = 14
         random.seed(903953477)
   		  	   		 	   			  		 			     			  	 
     # this method should create a QLearner, and train it for trading  		  	   		 	   			  		 			     			  	 
@@ -118,7 +117,6 @@ class StrategyLearner(object):
         # add your code to do learning here
         # Now at this point call the DT or RT learner
         self.learner.add_evidence(data[:, 0:3], data[:, -1])
-
 
         return
   		  	   		 	   			  		 			     			  	 
