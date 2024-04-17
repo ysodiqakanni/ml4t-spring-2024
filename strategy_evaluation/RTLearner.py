@@ -1,4 +1,13 @@
 import numpy as np
+
+
+def get_mode(arr):
+    unique, counts = np.unique(arr, return_counts=True)
+    idx = np.argmax(counts)
+    return unique[idx]
+
+
+# this learner is used for classification data so we use mode instead of mean or median
 class RTLearner(object):
     """
     Random Tree Learner
@@ -40,9 +49,9 @@ class RTLearner(object):
             return np.empty((0, 4))
         if data.shape[0] <= self.leaf_size:
             # single row so we're at the root. return the y val
-            meanVal = np.mean(ydata)
+            mode = get_mode(ydata)
             # single row so we're at the root. return the y val
-            return np.array([['leaf', float(meanVal), np.nan, np.nan]])
+            return np.array([['leaf', float(mode), np.nan, np.nan]])
 
         if len(np.unique(data[:, -1])) == 1:
             # all y values are the same so we don't need to explore further
@@ -63,8 +72,8 @@ class RTLearner(object):
             if left_data.shape[0] == data.shape[0]:
                 # check if the x values at the column are the same and just return mean(y)
                 if len(np.unique(data[:, randColIdx])) == 1:
-                    meanVal = np.mean(ydata)
-                    return np.array([['leaf', float(meanVal), np.nan, np.nan]])
+                    mode = get_mode(ydata)
+                    return np.array([['leaf', float(mode), np.nan, np.nan]])
                 else:
                     splitVal = np.min(data[:, randColIdx])
                     left_data = data[data[:, randColIdx] <= splitVal]

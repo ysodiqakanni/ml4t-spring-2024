@@ -36,6 +36,7 @@ import indicators
 import numpy as np
 from util import get_data
 import RTLearner as rtl
+import BagLearner as bgl
 class StrategyLearner(object):  		  	   		 	   			  		 			     			  	 
     """  		  	   		 	   			  		 			     			  	 
     A strategy learner that can learn a trading policy using the same indicators used in ManualStrategy.  		  	   		 	   			  		 			     			  	 
@@ -56,7 +57,9 @@ class StrategyLearner(object):
         self.verbose = verbose  		  	   		 	   			  		 			     			  	 
         self.impact = impact  		  	   		 	   			  		 			     			  	 
         self.commission = commission
-        self.learner = rtl.RTLearner(leaf_size=5)
+        #self.learner = rtl.RTLearner(leaf_size=5)
+        # let's use bagLearner
+        self.learner = bgl.BagLearner(rtl.RTLearner, kwargs={"leaf_size": 10}, bags=30)
         self.lookback = 14
         random.seed(903953477)
   		  	   		 	   			  		 			     			  	 

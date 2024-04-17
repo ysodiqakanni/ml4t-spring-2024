@@ -6,6 +6,11 @@ Bag Learner - An ensemble of learners
 import numpy as np  		  	   		 	   			  		 			     			  	 
   		  	   		 	   			  		 			     			  	 
   		  	   		 	   			  		 			     			  	 
+def get_mode(arr):
+    unique, counts = np.unique(arr, return_counts=True)
+    idx = np.argmax(counts)
+    return unique[idx]
+
 class BagLearner(object):
     """  		  	   		 	   			  		 			     			  	 
     This is a Bootstrap Aggregation Learner.		  	   		 	   			  		 			     			  	 
@@ -68,8 +73,9 @@ class BagLearner(object):
             qrez = qrez.reshape(-1,1)  # change qrez from 1D to 2D array
             result = np.hstack((result, qrez))
         # let's get the mean row by row
-        meanResult = np.mean(result, axis=1)
-        return meanResult
+        #meanResult = np.mean(result, axis=1)
+        modeResult = np.apply_along_axis(get_mode, axis=1, arr=result)
+        return modeResult
 
   		  	   		 	   			  		 			     			  	 
   		  	   		 	   			  		 			     			  	 
