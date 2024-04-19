@@ -109,10 +109,11 @@ class StrategyLearner(object):
         N = 15      # set the lookahead period
         for day in range(rows-N-1):
             # compare current price and price at N
-            if prices.ix[day+N, symbol] < prices.ix[day, symbol]:
+            ret = (prices.ix[day+N, symbol] / prices.ix[day, symbol]) - 1
+            if prices.ix[day+N, symbol] < prices.ix[day, symbol]:# and ret < -0.05:
                 # y column is the third
                 data[day, 3] = -1
-            elif prices.ix[day+N, symbol] > prices.ix[day, symbol]:
+            elif prices.ix[day+N, symbol] > prices.ix[day, symbol]:# and ret > 0.05:
                 data[day, 3] = 1
             else:
                 data[day, 3] = 0

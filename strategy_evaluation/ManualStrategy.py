@@ -82,6 +82,11 @@ def generate_plots(optimized, benchmark):
     file_name = "ManualStrategy"
     plt.savefig("{}.png".format(str(file_name)))
 
+def run():
+    # generate 2 plots
+    # create tables to compare stats
+
+    pass
 if __name__ == "__main__":
     print("One does not simply think up a strategy")
     sym = "JPM"
