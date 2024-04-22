@@ -15,7 +15,7 @@ class ManualStrategy(object):
         self.impact = impact
         self.commission = commission
 
-    def testPolicy(self, symbol = "AAPL",
+    def testPolicy(self, symbol="AAPL",
                    sd=dt.datetime(2010, 1, 1),
                    ed=dt.datetime(2011,12,31),
                    sv=100000):
@@ -152,29 +152,8 @@ def generate_plot(sample, benchmark, trades, legends_arr, title, file_name):
     plt.grid(True)
     plt.savefig("{}.png".format(str(file_name)))
 
-def run():
-    # generate 2 plots
-    # create tables to compare stats
 
-    pass
 if __name__ == "__main__":
     print("One does not simply think up a strategy")
-    #sym = "JPM"
-    #ms = ManualStrategy()
-    orders = ms.testPolicy(symbol=sym, sd=dt.datetime(2008,1,1),
-                           ed=dt.datetime(2009, 12, 31))
 
-    df_benchmark_trades = orders.copy()
-    df_benchmark_trades[:] = 0  # set all the values to zero
-    # now invest in 1000 shares and hold that position
-    df_benchmark_trades.loc[df_benchmark_trades.index[0], sym] = 1000
-
-    optimized_portfolio = compute_portvals(orders, symbol=sym, start_val=100000, commission=9.95, impact=0.005)
-    benchmark_portfolio = compute_portvals(df_benchmark_trades, symbol=sym, start_val=100000,commission=9.95,impact=0.005)
-    generate_plots(optimized_portfolio, benchmark_portfolio)
-    stats_manual = indicators.getStatistics(optimized_portfolio)
-    stats_benchmark = indicators.getStatistics(benchmark_portfolio)
-    print("Manual statistics: CR, SD, Mean, Portfolio", stats_manual)
-    print("Benchmark statistics: CR, SD, Mean, Portfolio", stats_benchmark)
-    print("Done running")
 
