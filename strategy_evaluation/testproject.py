@@ -2,6 +2,9 @@ import ManualStrategy as ms
 import experiment1 as exp1
 # to initialize and run all necessary files for the report
 
+def author():
+    return 'syusuff3'
+
 def run_experiment1():
     # just call experiment1.py file
     in1, out1 = exp1.run_experiment()

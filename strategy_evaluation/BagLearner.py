@@ -6,6 +6,9 @@ Bag Learner - An ensemble of learners
 import numpy as np  		  	   		 	   			  		 			     			  	 
   		  	   		 	   			  		 			     			  	 
   		  	   		 	   			  		 			     			  	 
+def author():
+    return 'syusuff3'
+
 def get_mode(arr):
     unique, counts = np.unique(arr, return_counts=True)
     idx = np.argmax(counts)
@@ -30,13 +33,6 @@ class BagLearner(object):
         self.learners = []
         for i in range(0, bags):
             self.learners.append(learner(**kwargs))
-
-    def author(self):  		  	   		 	   			  		 			     			  	 
-        """  		  	   		 	   			  		 			     			  	 
-        :return: The GT username of the student  		  	   		 	   			  		 			     			  	 
-        :rtype: str  		  	   		 	   			  		 			     			  	 
-        """  		  	   		 	   			  		 			     			  	 
-        return "syusuff3"
   		  	   		 	   			  		 			     			  	 
     def add_evidence(self, data_x, data_y):  		  	   		 	   			  		 			     			  	 
         """  		  	   		 	   			  		 			     			  	 

@@ -1,6 +1,8 @@
 import numpy as np
 
 
+def author():
+    return 'syusuff3'
 def get_mode(arr):
     unique, counts = np.unique(arr, return_counts=True)
     idx = np.argmax(counts)
@@ -18,13 +20,6 @@ class RTLearner(object):
         """
         self.treeArray = np.empty((0,4))     # save the tree in a matrix with 4 cols. [nodeId, FactorIdx, leftIdx, rightIdx]
         self.leaf_size = leaf_size
-
-    def author(self):
-        """
-        :return: The GT username of the student
-        :rtype: str
-        """
-        return "syusuff3"
 
     def add_evidence(self, data_x, data_y):
         """

@@ -37,6 +37,10 @@ import numpy as np
 from util import get_data
 import RTLearner as rtl
 import BagLearner as bgl
+
+def author():
+    return 'syusuff3'
+
 class StrategyLearner(object):  		  	   		 	   			  		 			     			  	 
     """  		  	   		 	   			  		 			     			  	 
     A strategy learner that can learn a trading policy using the same indicators used in ManualStrategy.  		  	   		 	   			  		 			     			  	 

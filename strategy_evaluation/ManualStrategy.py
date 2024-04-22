@@ -130,6 +130,8 @@ class ManualStrategy(object):
 
         return [round(cr, 6), round(sddr, 6), round(adr, 6), round(port_vals[-1],6)]
 
+def author():
+    return 'syusuff3'
 def generate_plot(sample, benchmark, trades, legends_arr, title, file_name):
     # normalize by dividing by the first values
     sample = sample/sample.iloc[0]
