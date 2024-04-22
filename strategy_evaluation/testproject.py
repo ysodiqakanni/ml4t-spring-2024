@@ -12,5 +12,7 @@ def run_experiment1():
     return
 
 if __name__ == "__main__":
-    print("running experiments")
+    # run manual strategy and generate charts for insample and outsample
+    manual_strategy = ms.ManualStrategy(impact=0.005, commission=9.95)
+    manual_strategy.generate_in_sample_chart("JPM")
     run_experiment1()

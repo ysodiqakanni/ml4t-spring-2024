@@ -12,7 +12,8 @@ class ManualStrategy(object):
         Constructor method
         """
         self.verbose = verbose
-
+        self.impact = impact
+        self.commission = commission
 
     def testPolicy(self, symbol = "AAPL",
                    sd=dt.datetime(2010, 1, 1),
@@ -66,20 +67,42 @@ class ManualStrategy(object):
 
         return trades
 
+    def generate_in_sample_chart(self, sym):
+        start_val = 100000
+        orders_ins = self.testPolicy(symbol=sym, sd=dt.datetime(2008,1,1),
+                                     ed=dt.datetime(2009, 12, 31), sv=start_val)
+        df_benchmark_trades = orders_ins.copy()
+        df_benchmark_trades[:] = 0  # set all the values to zero
+        # now invest in 1000 shares and hold that position
+        df_benchmark_trades.loc[df_benchmark_trades.index[0], sym] = 1000
 
-def generate_plots(optimized, benchmark):
+        in_sample_portfolio = compute_portvals(orders_ins, symbol=sym, start_val=start_val,
+                                               commission=self.commission, impact=self.impact)
+        benchmark_portfolio = compute_portvals(df_benchmark_trades, symbol=sym, start_val=start_val,
+                                               commission=self.commission, impact=self.impact)
+
+        trades_outs = self.testPolicy(symbol=sym, sd=dt.datetime(2010, 1, 1),
+                               ed=dt.datetime(2011, 12, 31))
+        out_sample_ports = compute_portvals(trades_outs,symbol=sym, start_val=start_val,
+                                            commission=self.commission, impact=self.impact)
+
+        # plot insample
+        generate_plot(in_sample_portfolio, benchmark_portfolio, ["Manual Strategy", "Benchmark"], "In-Sample Manual strategy vs Benchmark", "InsampleManualVsBenchmark")
+
+
+
+def generate_plot(sample, benchmark, legends_arr, title, file_name):
     # normalize by dividing by the first values
-    optimized = optimized/optimized.iloc[0]
+    sample = sample/sample.iloc[0]
     benchmark = benchmark/benchmark.iloc[0]
     plt.figure()
-    optimized.plot(color='r')
+    sample.plot(color='r')
     benchmark.plot(color='purple')
-    plt.legend(['Manual Strategy', 'Benchmark'])
-    plt.title("Manual strategy vs benchmark")
+    plt.legend(legends_arr)
+    plt.title(title)
     plt.xlabel("Date")
     plt.ylabel("Normalized value")
     plt.grid(True)
-    file_name = "ManualStrategy"
     plt.savefig("{}.png".format(str(file_name)))
 
 def run():
@@ -89,8 +112,8 @@ def run():
     pass
 if __name__ == "__main__":
     print("One does not simply think up a strategy")
-    sym = "JPM"
-    ms = ManualStrategy()
+    #sym = "JPM"
+    #ms = ManualStrategy()
     orders = ms.testPolicy(symbol=sym, sd=dt.datetime(2008,1,1),
                            ed=dt.datetime(2009, 12, 31))
 

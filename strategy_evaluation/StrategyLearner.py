@@ -57,11 +57,12 @@ class StrategyLearner(object):
         self.verbose = verbose  		  	   		 	   			  		 			     			  	 
         self.impact = impact  		  	   		 	   			  		 			     			  	 
         self.commission = commission
+        random.seed(903953477)
         #self.learner = rtl.RTLearner(leaf_size=5)
         # let's use bagLearner
         self.learner = bgl.BagLearner(rtl.RTLearner, kwargs={"leaf_size": 10}, bags=30)
-        self.lookback = 14
-        random.seed(903953477)
+        self.lookback = 10
+
   		  	   		 	   			  		 			     			  	 
     # this method should create a QLearner, and train it for trading  		  	   		 	   			  		 			     			  	 
 
@@ -96,7 +97,7 @@ class StrategyLearner(object):
         symbols = [symbol]
         #lookback = 3
         rsi = indicators.rsi_indicator(symbols, sd, ed, self.lookback)
-        bbp = indicators.bollinger_bands_indicator(symbols, sd, ed, self.lookback)
+        bbp = indicators.bollinger_bands_indicator(symbols, sd, ed, 50)
         stochastic = indicators.stochastic_indicator(symbols, sd, ed, self.lookback)
         merged_indicators = pd.concat([rsi, bbp, stochastic], axis=1)
         # add an extra column filled with zeros
@@ -172,7 +173,7 @@ class StrategyLearner(object):
         symbols = [symbol]
         #lookback = 14
 
-        bbp = indicators.bollinger_bands_indicator(symbols, sd, ed, self.lookback)
+        bbp = indicators.bollinger_bands_indicator(symbols, sd, ed, 50)
         rsi = indicators.rsi_indicator(symbols, sd, ed, self.lookback)
         stochastic = indicators.stochastic_indicator(symbols, sd, ed, self.lookback)
 
