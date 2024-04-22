@@ -81,7 +81,7 @@ class ManualStrategy(object):
         benchmark_portfolio = compute_portvals(df_benchmark_trades, symbol=sym, start_val=start_val,
                                                commission=self.commission, impact=self.impact)
 
-        ### =====================  ####
+        ###   =====================  ####
         trades_outs = self.testPolicy(symbol=sym, sd=dt.datetime(2010, 1, 1),
                                ed=dt.datetime(2011, 12, 31))
         benchmark_outs = trades_outs.copy()
