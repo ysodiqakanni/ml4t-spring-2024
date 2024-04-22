@@ -67,7 +67,7 @@ class ManualStrategy(object):
 
         return trades
 
-    def generate_in_sample_chart(self, sym):
+    def generate_charts(self, sym):
         start_val = 100000
         orders_ins = self.testPolicy(symbol=sym, sd=dt.datetime(2008,1,1),
                                      ed=dt.datetime(2009, 12, 31), sv=start_val)
@@ -81,15 +81,24 @@ class ManualStrategy(object):
         benchmark_portfolio = compute_portvals(df_benchmark_trades, symbol=sym, start_val=start_val,
                                                commission=self.commission, impact=self.impact)
 
+        ### =====================  ####
         trades_outs = self.testPolicy(symbol=sym, sd=dt.datetime(2010, 1, 1),
                                ed=dt.datetime(2011, 12, 31))
+        benchmark_outs = trades_outs.copy()
+        benchmark_outs[:] = 0  # set all the values to zero
+        # now invest in 1000 shares and hold that position
+        benchmark_outs.loc[benchmark_outs.index[0], sym] = 1000
+
         out_sample_ports = compute_portvals(trades_outs,symbol=sym, start_val=start_val,
                                             commission=self.commission, impact=self.impact)
+        benchmark_portfolio_outs = compute_portvals(benchmark_outs, symbol=sym, start_val=start_val,
+                                               commission=self.commission, impact=self.impact)
 
-        # plot insample
+        # plot in-sample
         generate_plot(in_sample_portfolio, benchmark_portfolio,  orders_ins, ["Manual Strategy", "Benchmark"], "In-Sample Manual strategy vs Benchmark", "InsampleManualVsBenchmark")
 
-
+        # plot out-sample
+        generate_plot(out_sample_ports, benchmark_portfolio_outs,  trades_outs, ["Manual Strategy", "Benchmark"], "Out-Sample Manual strategy vs Benchmark", "OutsampleManualVsBenchmark")
 
 def generate_plot(sample, benchmark, trades, legends_arr, title, file_name):
     # normalize by dividing by the first values
