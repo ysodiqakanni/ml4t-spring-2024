@@ -35,16 +35,16 @@ class ManualStrategy(object):
         trades.values[:, :] = 0  # set them all to nothing
 
         symbols = [symbol]
-        lookback = 14
+        lookback = 10
         rsi_vals = indicators.rsi_indicator(symbols, sd, ed, lookback)
-        bbp = indicators.bollinger_bands_indicator(symbols,sd, ed, 14)
+        bbp = indicators.bollinger_bands_indicator(symbols,sd, ed, 50)
         stochastic = indicators.stochastic_indicator(symbols, sd, ed, lookback)
 
         # Note that: Allowable positions are 1000 shares long, 1000 shares short, 0 shares.
         position = 0
         action = 0
         # use the index of rsi to create the loop
-        for day in range(rsi_vals.shape[0]):
+        for day in range(lookback, rsi_vals.shape[0]):
             if position > 2000 or position < -2000:
                 print("danger here! pos=", position)
             if rsi_vals.ix[day, symbol] < 30 or bbp.ix[day, symbol] < 0.2 and stochastic.ix[day, symbol] < 20:

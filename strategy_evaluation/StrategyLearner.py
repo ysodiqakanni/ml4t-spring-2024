@@ -106,14 +106,15 @@ class StrategyLearner(object):
         merged_indicators.fillna(0, inplace=True)
         data = merged_indicators.values # np.random.rand((252, 4))
         rows = rsi.shape[0]     # total number of trading days/rows. Must be equal for all indicators
-        N = 15      # set the lookahead period
-        for day in range(rows-N-1):
+        N = 10      # set the lookahead period
+        for day in range(self.lookback, rows-N-1):
             # compare current price and price at N
             ret = (prices.ix[day+N, symbol] / prices.ix[day, symbol]) - 1
-            if prices.ix[day+N, symbol] < prices.ix[day, symbol]:# and ret < -0.05:
+            # check the price difference. And it has to be > (commission + impact)
+            if prices.ix[day+N, symbol] < prices.ix[day, symbol] and ret < (-0.015 - self.impact):
                 # y column is the third
                 data[day, 3] = -1
-            elif prices.ix[day+N, symbol] > prices.ix[day, symbol]:# and ret > 0.05:
+            elif prices.ix[day+N, symbol] > prices.ix[day, symbol] and ret > (0.015 + self.impact):
                 data[day, 3] = 1
             else:
                 data[day, 3] = 0
@@ -225,7 +226,22 @@ class StrategyLearner(object):
   		  	   		 	   			  		 			     			  	 
 if __name__ == "__main__":  		  	   		 	   			  		 			     			  	 
     print("One does not simply think up a strategy")
-    sl = StrategyLearner()
-    ab = sl.add_evidence()
-    my_trades = sl.testPolicy()
+    #sl = StrategyLearner()
+    #ab = sl.add_evidence()
+    #my_trades = sl.testPolicy()
+    impact, commission = 0.005, 9.95
+    symbol = "JPM"
+    start_val = 100000
+    start_date, end_date = dt.datetime(2008, 1, 1), dt.datetime(2009, 12, 31)
+
+    strategy_learner = StrategyLearner(verbose=False, impact=impact, commission=commission)
+    strategy_learner.add_evidence(symbol=symbol, sd=start_date, ed=end_date)
+    trades1 = strategy_learner.testPolicy(symbol=symbol, sd=start_date, ed=end_date)
+
+    strategy_learner.add_evidence(symbol=symbol, sd=start_date, ed=end_date)
+    trades2 = strategy_learner.testPolicy(symbol=symbol, sd=start_date, ed=end_date)
+    #trades3 = strategy_learner.testPolicy(symbol=symbol, sd=start_date, ed=end_date)
+
+
+    isEqual = trades1.values == trades2.values
     print("received trades")
