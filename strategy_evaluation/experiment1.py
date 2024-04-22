@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 def author():
     return 'syusuff3'
 
-def compute_and_plot(start_date, end_date, file_name):
+def compute_and_plot(start_date, end_date, file_name, title):
     impact, commission = 0.005, 9.95
     symbol = "JPM"
     start_val = 100000
@@ -41,7 +41,7 @@ def compute_and_plot(start_date, end_date, file_name):
     benchmark_normalized.plot(color='purple')
 
     plt.legend(['Manual', 'Strategy', 'Benchmark'])
-    plt.title("Manual vs strategy vs benchmark")
+    plt.title(title)
     plt.xlabel("Date")
     plt.ylabel("Normalized value")
     plt.grid(True)
@@ -57,9 +57,11 @@ def run_experiment():
     # Commission: $9.95, Impact: 0.005
 
     # in-sample
-    indata = compute_and_plot(dt.datetime(2008,1,1), dt.datetime(2009,12,31), "Exp1InSample")
+    indata = compute_and_plot(dt.datetime(2008,1,1), dt.datetime(2009,12,31),
+                              "Exp1InSample", "In-sample Manual vs Strategy vs Benchmark")
     # out-sample
-    outdata = compute_and_plot(dt.datetime(2010,1,1), dt.datetime(2011,12,31), "Exp1OutSample")
+    outdata = compute_and_plot(dt.datetime(2010,1,1), dt.datetime(2011,12,31),
+                               "Exp1OutSample", "Out-sample Manual vs Strategy vs Benchmark")
 
 
     return indata, outdata
