@@ -94,11 +94,41 @@ class ManualStrategy(object):
         benchmark_portfolio_outs = compute_portvals(benchmark_outs, symbol=sym, start_val=start_val,
                                                commission=self.commission, impact=self.impact)
 
+        ins_stats = self.getStatistics(in_sample_portfolio)
+        ins_benchmark_stats = self.getStatistics(benchmark_portfolio)
+
+        out_stats = self.getStatistics(out_sample_ports)
+        out_benchmark_stats = self.getStatistics(benchmark_portfolio_outs)
+        if self.verbose:
+            print("CR, sddr, adr, portVal")
+            print(out_stats)
+            print(out_benchmark_stats)
+
         # plot in-sample
         generate_plot(in_sample_portfolio, benchmark_portfolio,  orders_ins, ["Manual Strategy", "Benchmark"], "In-Sample Manual strategy vs Benchmark", "InsampleManualVsBenchmark")
 
         # plot out-sample
         generate_plot(out_sample_ports, benchmark_portfolio_outs,  trades_outs, ["Manual Strategy", "Benchmark"], "Out-Sample Manual strategy vs Benchmark", "OutsampleManualVsBenchmark")
+
+    def compute_daily_returns(self, df):
+        """Compute and return the daily return values."""
+        daily_returns = df.copy()
+        # daily_returns[1:] = (df[1:] / df[:-1].values) - 1 # compute daily returns for row 1 onwards
+        daily_returns = (df / df.shift(1)) - 1  # much easier with Pandas!
+        daily_returns[0] = 0
+        # daily_returns.iloc[0, :] = 0  # Pandas leaves the 0th row full of Nans
+        return daily_returns
+
+    def getStatistics(self, port_vals):
+        """
+        computes and returns cummulative returns, std and mean of daily returns
+        """
+        dailyReturns = self.compute_daily_returns(port_vals)
+        cr = (port_vals[-1] / port_vals[0]) - 1
+        adr = dailyReturns.mean()
+        sddr = dailyReturns.std()
+
+        return [round(cr, 6), round(sddr, 6), round(adr, 6), round(port_vals[-1],6)]
 
 def generate_plot(sample, benchmark, trades, legends_arr, title, file_name):
     # normalize by dividing by the first values
