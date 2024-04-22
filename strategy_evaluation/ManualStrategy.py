@@ -87,17 +87,25 @@ class ManualStrategy(object):
                                             commission=self.commission, impact=self.impact)
 
         # plot insample
-        generate_plot(in_sample_portfolio, benchmark_portfolio, ["Manual Strategy", "Benchmark"], "In-Sample Manual strategy vs Benchmark", "InsampleManualVsBenchmark")
+        generate_plot(in_sample_portfolio, benchmark_portfolio,  orders_ins, ["Manual Strategy", "Benchmark"], "In-Sample Manual strategy vs Benchmark", "InsampleManualVsBenchmark")
 
 
 
-def generate_plot(sample, benchmark, legends_arr, title, file_name):
+def generate_plot(sample, benchmark, trades, legends_arr, title, file_name):
     # normalize by dividing by the first values
     sample = sample/sample.iloc[0]
     benchmark = benchmark/benchmark.iloc[0]
     plt.figure()
     sample.plot(color='r')
     benchmark.plot(color='purple')
+
+    for date, trade in trades.iterrows():
+        if trade["JPM"] == 1000:
+            plt.axvline(x=date, color="blue", linestyle="--")
+        elif trade["JPM"] == -1000:
+            plt.axvline(x=date, color="black", linestyle="--")
+
+
     plt.legend(legends_arr)
     plt.title(title)
     plt.xlabel("Date")
